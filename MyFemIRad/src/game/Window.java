@@ -40,22 +40,24 @@ public class Window extends JFrame {
 	public void start(MouseEvent e) {
 		int x = e.getX();
 		int y = e.getY();
-		System.out.println(x );
 		int controllNumber=Chessboard.MARGIN-Chessboard.CELL_SIZE/2;
 		int xLoc=(x-controllNumber)/Chessboard.CELL_SIZE ;
 		int yLoc=(y-controllNumber)/Chessboard.CELL_SIZE ;
 		if(chessboard.isLegal(xLoc, yLoc)) {
-			Position l=new Position(xLoc,yLoc,1);
+			Position l=new Position(xLoc,yLoc,Chessboard.HUMAN);
 			chessboard.add(l);
 		}
-//		if(chessboard.humanWins()) {
-//			
-//		}
-//		Location l=chessboard.searchLocation();
-//		chessboard.add(l);
-//		if(chessboard.computerWins()) {
-//			
-//		}
-		
+		if(chessboard.win(xLoc,yLoc,Chessboard.HUMAN)) {
+			System.out.println("Human win");
+			//TODO dialogue
+			return;
+		}
+		System.out.println("next?");
+		chessboard.searchCompMove(0,Chessboard.COMP_LOSS,Chessboard.COMP_WIN);
+/*		Position compMove=null;
+/*		chessboard.searchCompMove();
+		chessboard.add(compMove);
+		*/
+
 	}
 }
