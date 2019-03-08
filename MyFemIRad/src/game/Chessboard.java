@@ -16,7 +16,7 @@ public class Chessboard extends JPanel {
 	public static final int NONE = 0;
 
 	public static int FIRST = 1;
-	public static final int COMP_LOSS = -1;
+	public static final int COMP_LOSS = Integer.MIN_VALUE;
 	// on;dv'ndig
 	public static final int COMP_WIN = Integer.MAX_VALUE;
 //15*15
@@ -88,7 +88,7 @@ public class Chessboard extends JPanel {
 		}
 		// BBBBB
 		if (human == 5) {
-			return -1;
+			return Integer.MIN_VALUE;
 		}
 		// W
 		if (computer == 1 && human == 0) {
@@ -107,16 +107,16 @@ public class Chessboard extends JPanel {
 			return 100000;
 		}
 		if (computer == 0 && human == 1) {
-			return 35;
+			return -35;
 		}
 		if (computer == 0 && human == 2) {
-			return 800;
+			return -800;
 		}
 		if (computer == 0 && human == 3) {
-			return 15000;
+			return -15000;
 		}
 		if (computer == 0 && human == 4) {
-			return 800000;
+			return -800000;
 		}
 		if (computer == 0 && human == 0) {
 			return 7;
@@ -124,7 +124,7 @@ public class Chessboard extends JPanel {
 		if (computer != 0 && human != 0) {
 			return 0;
 		}
-		return 8023;
+		return -1;
 	}
 
 	public boolean win(int x, int y, int player) {
@@ -211,7 +211,7 @@ public class Chessboard extends JPanel {
 
 	private boolean isEmpty(int x, int y) {
 
-		if (positionsL[x][y].getPlayer() == 0) {
+		if (positionsL[x][y].getPlayer() == NONE) {
 			return true;
 		}
 		return false;
@@ -263,63 +263,120 @@ public class Chessboard extends JPanel {
 			}
 		}
 
-		// 3.扫描右上角到左下角上侧部分
-		for (int i = 14; i >= 4; i--) {
-			for (int k = i, j = 0; j < 15 && k >= 0; j++, k--) {
-				int numberHuman = 0;
-				int numberComp = 0;
-				int tempScore = 0;
-				int m = k;
-				int n = j;
-				while (m > k - 5 && k - 5 >= -1) {
-					if (positionsL[m][n].getPlayer() == -1)
-						numberComp++;
-					else if (positionsL[m][n].getPlayer() == 1)
-						numberHuman++;
+		//3.扫描右上角到左下角上侧部分
+				for(int i = 14; i >= 4; i--){
+					for(int k = i, j = 0; j < 15 && k >= 0; j++, k--){
+						int m = k;
+						int n = j;
+						int numberHuman = 0;
+						int numberComp = 0;
+						int tempScore = 0;
+						while(m > k - 5 && k - 5 >= -1){
+							if(positionsL[m][n].getPlayer() == -1) numberComp++;
+							else if(positionsL[m][n].getPlayer() == 1)numberHuman++;
+							
+							m--;
+							n++;
+						}
+						if(m == k-5){
+							tempScore = posTupleScore(numberHuman, numberComp);
+							for(m = k, n = j; m > k - 5 ; m--, n++){
+								positionsL[m][n].addScore(tempScore);
+							}
+						}
 
-					m--;
-					n++;
+					
+
+					}
 				}
-				// 注意斜向判断的时候，可能构不成五元组（靠近四个角落），遇到这种情况要忽略掉
-				if (m == k - 5) {
-					tempScore = posTupleScore(numberHuman, numberComp);
-					// 为该五元组的每个位置添加分数
-					for (m = k, n = j; m > k - 5; m--, n++) {
-						positionsL[m][n].addScore(tempScore);
+				
+				//4.扫描右上角到左下角下侧部分
+				for(int i = 1; i < 15; i++){
+					for(int k = i, j = 14; j >= 0 && k < 15; j--, k++){
+						int m = k;
+						int n = j;
+						int numberHuman = 0;
+						int numberComp = 0;
+						int tempScore = 0;
+						while(m < k + 5 && k + 5 <= 15){
+							if(positionsL[n][m].getPlayer() == -1) numberComp++;
+							else if(positionsL[n][m].getPlayer() == 1)numberHuman++;
+							
+							m++;
+							n--;
+						}
+						//注意斜向判断的时候，可能构不成五元组（靠近四个角落），遇到这种情况要忽略掉
+						if(m == k+5){
+							tempScore = posTupleScore(numberHuman, numberComp);
+							//为该五元组的每个位置添加分数
+							for(m = k, n = j; m < k + 5; m++, n--){
+								positionsL[n][m].addScore(tempScore); 
+							}
+						}
+						
+
 					}
 				}
 
-			}
-		}
+				//5.扫描左上角到右下角上侧部分
+				for(int i = 0; i < 11; i++){
+					for(int k = i, j = 0; j < 15 && k < 15; j++, k++){
+						int m = k;
+						int n = j;
+						int numberHuman = 0;
+						int numberComp = 0;
+						int tempScore = 0;
+						while(m < k + 5 && k + 5 <= 15){
+							if(positionsL[m][n].getPlayer() == -1) numberComp++;
+							else if(positionsL[m][n].getPlayer() == 1)numberHuman++;
+							
+							m++;
+							n++;
+						}
+						//注意斜向判断的时候，可能构不成五元组（靠近四个角落），遇到这种情况要忽略掉
+						if(m == k + 5){
+							tempScore = posTupleScore(numberHuman, numberComp);
+							//为该五元组的每个位置添加分数
+							for(m = k, n = j; m < k + 5; m++, n++){
+								positionsL[m][n].addScore(tempScore);
+							}
+						}
 
-		// 4.扫描右上角到左下角下侧部分
-		for (int i = 1; i < 15; i++) {
-			for (int k = i, j = 14; j >= 0 && k < 15; j--, k++) {
-				int numberHuman = 0;
-				int numberComp = 0;
-				int tempScore = 0;
-				int m = k;
-				int n = j;
-				while (m < k + 5 && k + 5 <= 15) {
-					if (positionsL[n][m].getPlayer() == -1)
-						numberComp++;
-					else if (positionsL[n][m].getPlayer() == 1)
-						numberHuman++;
-
-					m++;
-					n--;
-				}
-				// 注意斜向判断的时候，可能构不成五元组（靠近四个角落），遇到这种情况要忽略掉
-				if (m == k + 5) {
-					tempScore = posTupleScore(numberHuman, numberComp);
-					// 为该五元组的每个位置添加分数
-					for (m = k, n = j; m < k + 5; m++, n--) {
-						positionsL[n][m].addScore(tempScore);
+					
+		
 					}
-				}
+				}	
+			
+				//6.扫描左上角到右下角下侧部分
+				for(int i = 1; i < 11; i++){
+					for(int k = i, j = 0; j < 15 && k < 15; j++, k++){
+						int m = k;
+						int n = j;
+						int numberHuman = 0;
+						int numberComp = 0;
+						int tempScore = 0;
+						while(m < k + 5 && k + 5 <= 15){
+							if(positionsL[n][m].getPlayer() == -1) numberComp++;
+							else if(positionsL[n][m].getPlayer() == 1)numberHuman++;
+							
+							m++;
+							n++;
+						}
+						//注意斜向判断的时候，可能构不成五元组（靠近四个角落），遇到这种情况要忽略掉
+						if(m == k + 5){
+							tempScore = posTupleScore(numberHuman, numberComp);
+							//为该五元组的每个位置添加分数
+							for(m = k, n = j; m < k + 5; m++, n++){
+								positionsL[n][m].addScore(tempScore);
+							}
+						}
 
-			}
-		}
+					
+					
+
+					}
+				}	
+			
 		int max = -1;
 		for (int i = 0; i < 15; i++) {
 			for (int j = 0; j < 15; j++) {
@@ -336,7 +393,8 @@ public class Chessboard extends JPanel {
 
 	public Position searchHumanMove(int depth,int alpha,int beta) {
 		// TODO
-		if(depth==6) {
+		int newDepth=depth+1;
+		if(depth==5) {
 			return null;
 		}
 		int i, responseValue;
@@ -351,7 +409,7 @@ public class Chessboard extends JPanel {
 
 				if (isEmpty(i, j)) {
 					place(i, j, HUMAN);
-					searchCompMove(depth+1,alpha,beta);
+					searchCompMove(newDepth,alpha,beta);
 
 					responseValue = evaluate();
 					unplace(i, j);
@@ -367,8 +425,12 @@ public class Chessboard extends JPanel {
 		return new Position(bestX, bestY, HUMAN);
 		// TODO
 	}
+	int a=0;
+
 	public Position searchCompMove(int depth,int alpha, int beta) {
 		// TODO
+		int newDepth=depth+1;
+		System.out.println("DEPTH"+depth);
 		int i, responseValue;
 		int value = COMP_LOSS;
 		int bestX = -1;
@@ -376,12 +438,12 @@ public class Chessboard extends JPanel {
 		// Position
 
 		value = alpha;
-		for (i = 0; i < CAPACITY; i++) {
+		for (i = 0; i < CAPACITY&&value<beta; i++) {
 			for (int j = 0; j < CAPACITY; j++) {
 
 				if (isEmpty(i, j)) {
 					place(i, j, COMP);
-					searchHumanMove(depth+1,value,beta);
+					searchHumanMove(newDepth,value,beta);
 
 					responseValue = evaluate();
 					unplace(i, j);
@@ -393,7 +455,7 @@ public class Chessboard extends JPanel {
 				}
 			}
 		}
-		System.out.println(",,,,,");
+		System.out.println("value: "+value+" "+bestX+" "+bestY);
 		return new Position(bestX, bestY, COMP);
 	}
 }
