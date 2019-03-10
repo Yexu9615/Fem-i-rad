@@ -14,13 +14,15 @@ public class Chessboard extends JPanel {
 	public static final int COMP = -1;
 	public static final int HUMAN = 1;
 	public static final int NONE = 0;
+	public static final int DEPTH=3;
 
 	public static int FIRST = 1;
 	public static final int COMP_LOSS = Integer.MIN_VALUE;
-	// on;dv'ndig
+	public static final int DRAW = 0;
+
 	public static final int COMP_WIN = Integer.MAX_VALUE;
 //15*15
-	public static final int CAPACITY = 15;
+	public static final int CAPACITY = 6;
 	private ArrayList<Position> positionsG = new ArrayList<>();
 	private Color lineColor = new Color(66, 66, 66);// 棋盘背景色
 	public static final int CELL_SIZE = 35;
@@ -42,7 +44,6 @@ public class Chessboard extends JPanel {
 				positionsL[i][j] = new Position(i, j, 0);
 			}
 		}
-
 	}
 
 	public boolean isLegal(int x, int y) {
@@ -60,7 +61,6 @@ public class Chessboard extends JPanel {
 		positionsL[loc.getX()][loc.getY()] = loc;
 		positionsG.add(loc);
 		repaint();
-		System.out.println("done");
 	}
 
 	public void paint(Graphics g) {
@@ -78,7 +78,6 @@ public class Chessboard extends JPanel {
 
 	public void unplace(int x, int y) {
 		positionsL[x][y].setPlayer(0);
-
 	}
 
 	public int posTupleScore(int human, int computer) {
@@ -106,6 +105,7 @@ public class Chessboard extends JPanel {
 		if (computer == 4 && human == 0) {
 			return 100000;
 		}
+		// B
 		if (computer == 0 && human == 1) {
 			return -35;
 		}
@@ -144,12 +144,15 @@ public class Chessboard extends JPanel {
 		// 丨
 		sum = 0;
 		for (int i = y - 4; i < y + 4 && i >= 0 && i < CAPACITY; i++) {
+			System.out.println(x + " " + i);
 			if (positionsL[x][i].getPlayer() == player) {
+				System.out.println(positionsL[x][i].getPlayer());
 				sum++;
 			} else {
 				sum = 0;
 			}
 			if (sum == 5) {
+				System.out.println("femnglema");
 				return true;
 			}
 		}
@@ -169,18 +172,18 @@ public class Chessboard extends JPanel {
 		}
 		// 丿
 		sum = 0;
-		for (int i = x + 4, j = y - 4; i > x - 5 && i < CAPACITY && j < y + 5 
-				&& j < CAPACITY; i--, j++) {
-			if(i>=0&&j>=0) {
-			if (positionsL[i][j].getPlayer() == player) {
-				sum++;
-			} else {
-				sum = 0;
+		for (int i = x + 4, j = y - 4; i > x - 5 && i < CAPACITY && j < y + 5 && j < CAPACITY; i--, j++) {
+			if (i >= 0 && j >= 0) {
+				if (positionsL[i][j].getPlayer() == player) {
+					sum++;
+				} else {
+					sum = 0;
+				}
+				if (sum == 5) {
+					return true;
+				}
 			}
-			if (sum == 5) {
-				return true;
-			}
-		}}
+		}
 		return false;
 	}
 
@@ -216,8 +219,6 @@ public class Chessboard extends JPanel {
 		}
 		return false;
 	}
-
-	
 
 	public int evaluate() {
 		int maxScore;
@@ -262,121 +263,115 @@ public class Chessboard extends JPanel {
 				}
 			}
 		}
+		// 3.扫描右上角到左下角上侧部分
+		for (int i = 14; i >= 4; i--) {
+			for (int k = i, j = 0; j < 15 && k >= 0; j++, k--) {
+				int m = k;
+				int n = j;
+				int numberHuman = 0;
+				int numberComp = 0;
+				int tempScore = 0;
+				while (m > k - 5 && k - 5 >= -1) {
+					if (positionsL[m][n].getPlayer() == -1)
+						numberComp++;
+					else if (positionsL[m][n].getPlayer() == 1)
+						numberHuman++;
 
-		//3.扫描右上角到左下角上侧部分
-				for(int i = 14; i >= 4; i--){
-					for(int k = i, j = 0; j < 15 && k >= 0; j++, k--){
-						int m = k;
-						int n = j;
-						int numberHuman = 0;
-						int numberComp = 0;
-						int tempScore = 0;
-						while(m > k - 5 && k - 5 >= -1){
-							if(positionsL[m][n].getPlayer() == -1) numberComp++;
-							else if(positionsL[m][n].getPlayer() == 1)numberHuman++;
-							
-							m--;
-							n++;
-						}
-						if(m == k-5){
-							tempScore = posTupleScore(numberHuman, numberComp);
-							for(m = k, n = j; m > k - 5 ; m--, n++){
-								positionsL[m][n].addScore(tempScore);
-							}
-						}
-
-					
-
+					m--;
+					n++;
+				}
+				if (m == k - 5) {
+					tempScore = posTupleScore(numberHuman, numberComp);
+					for (m = k, n = j; m > k - 5; m--, n++) {
+						positionsL[m][n].addScore(tempScore);
 					}
 				}
-				
-				//4.扫描右上角到左下角下侧部分
-				for(int i = 1; i < 15; i++){
-					for(int k = i, j = 14; j >= 0 && k < 15; j--, k++){
-						int m = k;
-						int n = j;
-						int numberHuman = 0;
-						int numberComp = 0;
-						int tempScore = 0;
-						while(m < k + 5 && k + 5 <= 15){
-							if(positionsL[n][m].getPlayer() == -1) numberComp++;
-							else if(positionsL[n][m].getPlayer() == 1)numberHuman++;
-							
-							m++;
-							n--;
-						}
-						//注意斜向判断的时候，可能构不成五元组（靠近四个角落），遇到这种情况要忽略掉
-						if(m == k+5){
-							tempScore = posTupleScore(numberHuman, numberComp);
-							//为该五元组的每个位置添加分数
-							for(m = k, n = j; m < k + 5; m++, n--){
-								positionsL[n][m].addScore(tempScore); 
-							}
-						}
-						
+			}
+		}
 
+		// 4.扫描右上角到左下角下侧部分
+		for (int i = 1; i < 15; i++) {
+			for (int k = i, j = 14; j >= 0 && k < 15; j--, k++) {
+				int m = k;
+				int n = j;
+				int numberHuman = 0;
+				int numberComp = 0;
+				int tempScore = 0;
+				while (m < k + 5 && k + 5 <= 15) {
+					if (positionsL[n][m].getPlayer() == -1)
+						numberComp++;
+					else if (positionsL[n][m].getPlayer() == 1)
+						numberHuman++;
+
+					m++;
+					n--;
+				}
+				// 注意斜向判断的时候，可能构不成五元组（靠近四个角落），遇到这种情况要忽略掉
+				if (m == k + 5) {
+					tempScore = posTupleScore(numberHuman, numberComp);
+					// 为该五元组的每个位置添加分数
+					for (m = k, n = j; m < k + 5; m++, n--) {
+						positionsL[n][m].addScore(tempScore);
 					}
 				}
 
-				//5.扫描左上角到右下角上侧部分
-				for(int i = 0; i < 11; i++){
-					for(int k = i, j = 0; j < 15 && k < 15; j++, k++){
-						int m = k;
-						int n = j;
-						int numberHuman = 0;
-						int numberComp = 0;
-						int tempScore = 0;
-						while(m < k + 5 && k + 5 <= 15){
-							if(positionsL[m][n].getPlayer() == -1) numberComp++;
-							else if(positionsL[m][n].getPlayer() == 1)numberHuman++;
-							
-							m++;
-							n++;
-						}
-						//注意斜向判断的时候，可能构不成五元组（靠近四个角落），遇到这种情况要忽略掉
-						if(m == k + 5){
-							tempScore = posTupleScore(numberHuman, numberComp);
-							//为该五元组的每个位置添加分数
-							for(m = k, n = j; m < k + 5; m++, n++){
-								positionsL[m][n].addScore(tempScore);
-							}
-						}
+			}
+		}
+		// 5.扫描左上角到右下角上侧部分
+		for (int i = 0; i < 11; i++) {
+			for (int k = i, j = 0; j < 15 && k < 15; j++, k++) {
+				int m = k;
+				int n = j;
+				int numberHuman = 0;
+				int numberComp = 0;
+				int tempScore = 0;
+				while (m < k + 5 && k + 5 <= 15) {
+					if (positionsL[m][n].getPlayer() == -1)
+						numberComp++;
+					else if (positionsL[m][n].getPlayer() == 1)
+						numberHuman++;
 
-					
-		
+					m++;
+					n++;
+				}
+				// 注意斜向判断的时候，可能构不成五元组（靠近四个角落），遇到这种情况要忽略掉
+				if (m == k + 5) {
+					tempScore = posTupleScore(numberHuman, numberComp);
+					// 为该五元组的每个位置添加分数
+					for (m = k, n = j; m < k + 5; m++, n++) {
+						positionsL[m][n].addScore(tempScore);
 					}
-				}	
-			
-				//6.扫描左上角到右下角下侧部分
-				for(int i = 1; i < 11; i++){
-					for(int k = i, j = 0; j < 15 && k < 15; j++, k++){
-						int m = k;
-						int n = j;
-						int numberHuman = 0;
-						int numberComp = 0;
-						int tempScore = 0;
-						while(m < k + 5 && k + 5 <= 15){
-							if(positionsL[n][m].getPlayer() == -1) numberComp++;
-							else if(positionsL[n][m].getPlayer() == 1)numberHuman++;
-							
-							m++;
-							n++;
-						}
-						//注意斜向判断的时候，可能构不成五元组（靠近四个角落），遇到这种情况要忽略掉
-						if(m == k + 5){
-							tempScore = posTupleScore(numberHuman, numberComp);
-							//为该五元组的每个位置添加分数
-							for(m = k, n = j; m < k + 5; m++, n++){
-								positionsL[n][m].addScore(tempScore);
-							}
-						}
+				}
 
-					
-					
+			}
+		}
 
+		// 6.扫描左上角到右下角下侧部分
+		for (int i = 1; i < 11; i++) {
+			for (int k = i, j = 0; j < 15 && k < 15; j++, k++) {
+				int m = k;
+				int n = j;
+				int numberHuman = 0;
+				int numberComp = 0;
+				int tempScore = 0;
+				while (m < k + 5 && k + 5 <= 15) {
+					if (positionsL[n][m].getPlayer() == -1)
+						numberComp++;
+					else if (positionsL[n][m].getPlayer() == 1)
+						numberHuman++;
+					m++;
+					n++;
+				}
+				if (m == k + 5) {
+					tempScore = posTupleScore(numberHuman, numberComp);
+					for (m = k, n = j; m < k + 5; m++, n++) {
+						positionsL[n][m].addScore(tempScore);
 					}
-				}	
-			
+				}
+
+			}
+		}
+
 		int max = -1;
 		for (int i = 0; i < 15; i++) {
 			for (int j = 0; j < 15; j++) {
@@ -387,75 +382,122 @@ public class Chessboard extends JPanel {
 			}
 		}
 
-		// TODO
 		return max;
 	}
 
-	public Position searchHumanMove(int depth,int alpha,int beta) {
-		// TODO
-		int newDepth=depth+1;
-		if(depth==5) {
-			return null;
-		}
-		int i, responseValue;
-		// humanloss
-		int value = COMP_WIN;
-		int bestX = -1;
-		int bestY = -1;
-		// Position
-		value = beta;
-		for (i = 0; i < CAPACITY; i++) {
-			for (int j = 0; j < CAPACITY; j++) {
+	public MoveInfo findCompMove() {
+		int responseValue;
+		int value;
+		int bestX = 0;
+		int bestY = 0;
 
-				if (isEmpty(i, j)) {
-					place(i, j, HUMAN);
-					searchCompMove(newDepth,alpha,beta);
+		MoveInfo quickWinInfo;
 
-					responseValue = evaluate();
-					unplace(i, j);
-					if (responseValue < value) {
-						value = responseValue;
-						bestX = i;
-						bestY = j;
-					}   
-				}
-			}
-		}
+		if (fullBoard())
+			value = DRAW;
+		else if ((quickWinInfo = immediateCompWin()) != null)
+			return quickWinInfo;
+		else {
+			value = COMP_LOSS;
+			for (int i = 0; i < CAPACITY; i++) {
+				for (int j = 0; j < CAPACITY; j++) {
+					if (isEmpty(i, j)) {
+						place(i, j, COMP);
+						responseValue = findHumanMove().value;
+						unplace(i, j); // Restore board
 
-		return new Position(bestX, bestY, HUMAN);
-		// TODO
-	}
-	int a=0;
-
-	public Position searchCompMove(int depth,int alpha, int beta) {
-		// TODO
-		int newDepth=depth+1;
-		System.out.println("DEPTH"+depth);
-		int i, responseValue;
-		int value = COMP_LOSS;
-		int bestX = -1;
-		int bestY = -1;
-		// Position
-
-		value = alpha;
-		for (i = 0; i < CAPACITY&&value<beta; i++) {
-			for (int j = 0; j < CAPACITY; j++) {
-
-				if (isEmpty(i, j)) {
-					place(i, j, COMP);
-					searchHumanMove(newDepth,value,beta);
-
-					responseValue = evaluate();
-					unplace(i, j);
-					if (responseValue > value) {
-						value = responseValue;
-						bestX = i;
-						bestY = j;
+						if (responseValue > value) {
+							// Update best move
+							value = responseValue;
+							bestX = i;
+							bestY = j;
+						}
 					}
 				}
 			}
 		}
-		System.out.println("value: "+value+" "+bestX+" "+bestY);
-		return new Position(bestX, bestY, COMP);
+
+		return new MoveInfo(bestX, bestY, value);
 	}
+
+	private MoveInfo immediateCompWin() {
+		for (int i = 0; i < CAPACITY; i++) {
+			for (int j = 0; j < CAPACITY; j++) {
+				if (isEmpty(i, j)) {
+					place(i, j, COMP);
+					if (win(i, j, COMP)) {
+						unplace(i, j);
+						return new MoveInfo(i, j, COMP);
+					}
+					unplace(i, j);
+
+				}
+			}
+		}
+		return null;
+	}
+
+	public boolean fullBoard() {
+		for (int i = 0; i < CAPACITY; i++) {
+			for (int j = 0; j < CAPACITY; j++) {
+				if (isEmpty(i, j)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	public MoveInfo findHumanMove() {
+		int i, responseValue;
+		int value;
+		int bestX = 0;
+		int bestY = 0;
+
+		MoveInfo quickWinInfo;
+
+		if (fullBoard())
+			value = DRAW;
+		else if ((quickWinInfo = immediateHumanWin()) != null)
+			return quickWinInfo;
+		else {
+			value = COMP_WIN;
+			for (i = 1; i < CAPACITY; i++) {
+				for (int j = 0; j < CAPACITY; j++) {
+
+					if (isEmpty(i, j)) {
+						place(i, j, HUMAN);
+						responseValue = findCompMove().value;
+						unplace(i, j); // Restore board
+
+						if (responseValue < value) {
+							value = responseValue;
+							bestX = i;
+							bestY = j;
+						}
+					}
+				}
+			}
+		}
+
+		return new MoveInfo(bestX, bestY, value);
+	}
+
+	private MoveInfo immediateHumanWin() {
+		for (int i = 0; i < CAPACITY; i++) {
+			for (int j = 0; j < CAPACITY; j++) {
+				if (isEmpty(i, j)) {
+
+					place(i, j, HUMAN);
+					if (win(i, j, HUMAN)) {
+						unplace(i, j);
+						return new MoveInfo(i, j, HUMAN);
+					}
+					unplace(i, j);
+				}
+			}
+		}
+		return null;
+	}
+
 }

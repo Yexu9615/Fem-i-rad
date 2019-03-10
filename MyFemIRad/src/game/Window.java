@@ -52,12 +52,20 @@ public class Window extends JFrame {
 			//TODO dialogue
 			return;
 		}
-		System.out.println("next?");
-		chessboard.searchCompMove(0,Chessboard.COMP_LOSS,Chessboard.COMP_WIN);
+		MoveInfo mi=chessboard.findCompMove();
+		Position cm=new Position(mi.x,mi.y,Chessboard.COMP);
+
+		chessboard.add(cm);
+//		chessboard.searchCompMove(0,Chessboard.COMP_LOSS,Chessboard.COMP_WIN);
 /*		Position compMove=null;
 /*		chessboard.searchCompMove();
 		chessboard.add(compMove);
 		*/
+		if(chessboard.win(mi.x,mi.y,Chessboard.COMP)) {
+			System.out.println("Comp win");
+			//TODO dialogue
+			return;
+		}
 
 	}
 }
