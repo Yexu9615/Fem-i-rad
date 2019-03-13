@@ -46,18 +46,28 @@ public class Window extends JFrame {
 		if(chessboard.isLegal(xLoc, yLoc)) {
 			Position l=new Position(xLoc,yLoc,Chessboard.HUMAN);
 			chessboard.add(l);
+		}else {
+			return;
 		}
 		if(chessboard.win(xLoc,yLoc,Chessboard.HUMAN)) {
 			System.out.println("Human win");
 			//TODO dialogue
 			return;
 		}
-		System.out.println("next?");
-		chessboard.searchCompMove(0,Chessboard.COMP_LOSS,Chessboard.COMP_WIN);
+		MoveInfo mi=chessboard.findCompMove(3);
+		Position cm=new Position(mi.x,mi.y,Chessboard.COMP);
+
+		chessboard.add(cm);
+//		chessboard.searchCompMove(0,Chessboard.COMP_LOSS,Chessboard.COMP_WIN);
 /*		Position compMove=null;
 /*		chessboard.searchCompMove();
 		chessboard.add(compMove);
 		*/
+//		if(chessboard.win(mi.x,mi.y,Chessboard.COMP)) {
+//			System.out.println("Comp win");
+//			//TODO dialogue
+//			return;
+//		}
 
 	}
 }
